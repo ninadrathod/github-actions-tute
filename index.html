@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Actions CI/CD Tutorial — Factory Floor Guide</title>
+  <meta name="description" content="A beginner-friendly guide to GitHub Actions for CI/CD, with diagrams, examples, and 100 practice questions." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            factory: {
+              50:  '#fffbeb',
+              100: '#fef3c7',
+              200: '#fde68a',
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+              800: '#92400e',
+              900: '#78350f',
+            },
+            slate: {
+              850: '#f1f5f9',
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'factory': '0 4px 24px -4px rgba(245, 158, 11, 0.15)',
+            'card': '0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.08)',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* Minimal custom CSS — factory stripe accent */
+    .factory-stripe {
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 8px,
+        rgba(245, 158, 11, 0.12) 8px,
+        rgba(245, 158, 11, 0.12) 16px
+      );
+    }
+    .conveyor-dot { animation: conveyor 2s linear infinite; }
+    @keyframes conveyor {
+      0%   { transform: translateX(-100%); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { transform: translateX(400%); opacity: 0; }
+    }
+    details[open] summary .chevron { transform: rotate(180deg); }
+    .toc-link.active { color: #d97706; border-left-color: #d97706; background: rgba(245,158,11,.12); }
+    #mobile-menu.open { transform: translateX(0); }
+    #mobile-overlay.open { opacity: 1; pointer-events: auto; }
+    pre code { font-size: 0.8125rem; line-height: 1.6; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+  <!-- Mobile sticky top bar -->
+  <header class="lg:hidden sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
+    <div class="flex items-center justify-between px-4 py-3">
+      <div class="flex items-center gap-2">
+        <svg class="w-7 h-7 text-factory-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          <circle cx="12" cy="12" r="4"/>
+        </svg>
+        <span class="font-semibold text-sm text-slate-900">GitHub Actions CI/CD</span>
+      </div>
+      <button id="menu-toggle" aria-label="Open navigation menu" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile overlay + slide-out nav -->
+  <div id="mobile-overlay" class="lg:hidden fixed inset-0 bg-black/60 z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+  <nav id="mobile-menu" class="lg:hidden fixed top-0 left-0 h-full w-72 bg-white border-r border-slate-200 z-50 transform -translate-x-full transition-transform duration-300 ease-out overflow-y-auto">
+    <div class="p-4 border-b border-slate-200 flex justify-between items-center">
+      <span class="font-semibold text-factory-600 text-sm uppercase tracking-wider">Contents</span>
+      <button id="menu-close" aria-label="Close menu" class="p-1.5 rounded hover:bg-slate-100">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <ul id="mobile-toc" class="p-3 space-y-0.5 text-sm"></ul>
+  </nav>
+
+  <div class="lg:flex min-h-screen">
+
+    <!-- Desktop sticky sidebar -->
+    <aside class="hidden lg:block w-72 shrink-0 border-r border-slate-200 bg-slate-50/90">
+      <div class="sticky top-0 max-h-screen overflow-y-auto p-6">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="p-2 rounded-lg bg-factory-500/10 border border-factory-500/20">
+            <svg class="w-8 h-8 text-factory-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="7" width="20" height="10" rx="1"/>
+              <path d="M6 7V5a2 2 0 012-2h8a2 2 0 012 2v2"/>
+              <circle cx="8" cy="12" r="1.5" fill="currentColor"/>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+              <circle cx="16" cy="12" r="1.5" fill="currentColor"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-widest text-factory-500 font-medium">Factory Floor Guide</p>
+            <h1 class="font-bold text-slate-900 leading-tight">GitHub Actions<br/>CI/CD Tutorial</h1>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mb-4 leading-relaxed">Navigate the assembly line of continuous integration and delivery.</p>
+        <ul id="desktop-toc" class="space-y-0.5 text-sm border-t border-slate-200 pt-4"></ul>
+        <div class="mt-6 p-3 rounded-lg bg-white border border-slate-200 text-xs text-slate-500">
+          <span class="text-factory-600 font-semibold">100 MCQs</span> — 10 per section, with instant feedback.
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 min-w-0">
+
+      <!-- Hero -->
+      <section class="factory-stripe border-b border-slate-200">
+        <div class="max-w-3xl mx-auto px-6 py-16 lg:py-20">
+          <p class="text-factory-600 text-sm font-medium uppercase tracking-widest mb-3">Beginner · CI/CD · GitHub Actions</p>
+          <h2 class="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 leading-tight">Build Software Like a Factory Assembly Line</h2>
+          <p class="text-lg text-slate-600 leading-relaxed mb-6">
+            Imagine a car factory: raw parts arrive, robots weld and paint, quality inspectors check every unit, and finished cars roll off the line. <strong class="text-slate-800">GitHub Actions</strong> is your software factory — it automatically builds, tests, and ships your code every time you push a change.
+          </p>
+          <div class="flex flex-wrap gap-3 text-sm">
+            <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">No prior CI/CD needed</span>
+            <span class="px-3 py-1 rounded-full bg-factory-500/10 text-factory-600 border border-factory-500/20">Real YAML examples</span>
+            <span class="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">Monitoring & metrics</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="max-w-3xl mx-auto px-6 py-10 space-y-20">
+
+        <!-- SECTION 1: Prerequisites -->
+        <article id="prerequisites" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">01</span>
+            <h2 class="text-2xl font-bold text-slate-900">Prerequisites</h2>
+          </div>
+          <p class="text-slate-600 mb-6 leading-relaxed">Before stepping onto the factory floor, make sure you have these tools and concepts in place. Don't worry — we'll explain everything else from scratch.</p>
+
+          <div class="grid sm:grid-cols-2 gap-4 mb-8">
+            <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-card">
+              <h3 class="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                <svg class="w-4 h-4 text-factory-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Required Tools
+              </h3>
+              <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+                <li>A <strong class="text-slate-700">GitHub account</strong> (free tier works)</li>
+                <li>Basic <strong class="text-slate-700">Git</strong> knowledge (clone, commit, push)</li>
+                <li>A code editor (VS Code recommended)</li>
+                <li>Optional: Node.js or Python installed locally</li>
+              </ul>
+            </div>
+            <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-card">
+              <h3 class="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                <svg class="w-4 h-4 text-factory-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Helpful Concepts
+              </h3>
+              <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+                <li>What a <strong class="text-slate-700">repository (repo)</strong> is</li>
+                <li>Branches like <code class="text-factory-700 font-mono text-xs">main</code> and pull requests</li>
+                <li>Reading simple YAML files (indentation matters!)</li>
+                <li>Command-line basics (<code class="text-factory-700 font-mono text-xs">npm test</code>, etc.)</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Diagram: Factory readiness checklist -->
+          <figure class="rounded-xl border border-slate-200 bg-white overflow-hidden mb-8">
+            <svg viewBox="0 0 640 200" class="w-full" xmlns="http://www.w3.org/2000/svg">
+              <rect width="640" height="200" fill="#f8fafc"/>
+              <text x="320" y="28" text-anchor="middle" fill="#475569" font-size="13" font-family="Inter,sans-serif" font-weight="600">FACTORY READINESS CHECKLIST</text>
+              <!-- Conveyor belt -->
+              <rect x="40" y="140" width="560" height="24" rx="4" fill="#f1f5f9" stroke="#334155"/>
+              <rect x="40" y="148" width="560" height="8" fill="#334155"/>
+              <!-- Stations -->
+              <g>
+                <rect x="60" y="70" width="100" height="60" rx="6" fill="#ffffff" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="110" y="95" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">GitHub</text>
+                <text x="110" y="112" text-anchor="middle" fill="#64748b" font-size="10">Account ✓</text>
+                <line x1="110" y1="130" x2="110" y2="140" stroke="#475569" stroke-width="1.5"/>
+              </g>
+              <g>
+                <rect x="190" y="70" width="100" height="60" rx="6" fill="#ffffff" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="240" y="95" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Git Basics</text>
+                <text x="240" y="112" text-anchor="middle" fill="#64748b" font-size="10">Clone/Push ✓</text>
+                <line x1="240" y1="130" x2="240" y2="140" stroke="#475569" stroke-width="1.5"/>
+              </g>
+              <g>
+                <rect x="320" y="70" width="100" height="60" rx="6" fill="#ffffff" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="370" y="95" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Editor</text>
+                <text x="370" y="112" text-anchor="middle" fill="#64748b" font-size="10">VS Code ✓</text>
+                <line x1="370" y1="130" x2="370" y2="140" stroke="#475569" stroke-width="1.5"/>
+              </g>
+              <g>
+                <rect x="450" y="70" width="100" height="60" rx="6" fill="#ffffff" stroke="#34d399" stroke-width="1.5"/>
+                <text x="500" y="95" text-anchor="middle" fill="#34d399" font-size="11" font-weight="600">Ready!</text>
+                <text x="500" y="112" text-anchor="middle" fill="#64748b" font-size="10">Start Line →</text>
+                <line x1="500" y1="130" x2="500" y2="140" stroke="#475569" stroke-width="1.5"/>
+              </g>
+              <!-- Arrows between stations -->
+              <path d="M160 100 H190" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+              <path d="M290 100 H320" stroke="#475569" stroke-width="1.5"/>
+              <path d="M420 100 H450" stroke="#475569" stroke-width="1.5"/>
+              <defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#475569"/></marker></defs>
+            </svg>
+            <figcaption class="px-4 py-2 text-xs text-slate-500 border-t border-slate-200">Each prerequisite is a station on the conveyor — complete them before the line starts moving.</figcaption>
+          </figure>
+
+          <div id="quiz-prerequisites" class="quiz-container space-y-4"></div>
+        </article>
+
+        <!-- SECTION 2: What is CI/CD -->
+        <article id="cicd" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">02</span>
+            <h2 class="text-2xl font-bold text-slate-900">What Is CI/CD?</h2>
+          </div>
+          <p class="text-slate-600 mb-4 leading-relaxed">
+            <strong class="text-slate-800">CI/CD</strong> stands for <em>Continuous Integration</em> and <em>Continuous Delivery/Deployment</em>. Think of it as an automated factory line for your code.
+          </p>
+          <div class="space-y-4 mb-8">
+            <div class="p-4 rounded-xl border-l-4 border-factory-500 bg-white">
+              <h3 class="font-semibold text-factory-700 mb-1">Continuous Integration (CI)</h3>
+              <p class="text-sm text-slate-600">Every time a developer pushes code, the factory automatically <strong class="text-slate-700">builds</strong> the project and <strong class="text-slate-700">runs tests</strong>. Broken code is caught immediately — like a quality inspector rejecting a defective part before it reaches the next station.</p>
+            </div>
+            <div class="p-4 rounded-xl border-l-4 border-emerald-500 bg-white">
+              <h3 class="font-semibold text-emerald-700 mb-1">Continuous Delivery / Deployment (CD)</h3>
+              <p class="text-sm text-slate-600">After tests pass, the factory can automatically <strong class="text-slate-700">package</strong> and <strong class="text-slate-700">ship</strong> your app to staging or production. <em>Delivery</em> means it's ready to deploy (with a human click); <em>Deployment</em> means it goes live automatically.</p>
+            </div>
+          </div>
+
+          <!-- CI/CD Pipeline SVG -->
+          <figure class="rounded-xl border border-slate-200 bg-white overflow-hidden mb-8">
+            <svg viewBox="0 0 640 280" class="w-full" xmlns="http://www.w3.org/2000/svg">
+              <rect width="640" height="280" fill="#f8fafc"/>
+              <text x="320" y="24" text-anchor="middle" fill="#64748b" font-size="12" font-family="Inter,sans-serif">THE CI/CD ASSEMBLY LINE</text>
+              <!-- Main conveyor -->
+              <rect x="30" y="200" width="580" height="20" rx="3" fill="#f1f5f9"/>
+              <line x1="30" y1="210" x2="610" y2="210" stroke="#334155" stroke-width="2" stroke-dasharray="12 8"/>
+              <!-- Stage boxes -->
+              <g><rect x="40" y="100" width="90" height="80" rx="8" fill="#ffffff" stroke="#6366f1"/><text x="85" y="130" text-anchor="middle" fill="#a5b4fc" font-size="11" font-weight="600">Code</text><text x="85" y="148" text-anchor="middle" fill="#64748b" font-size="10">Push / PR</text><text x="85" y="168" text-anchor="middle" fill="#64748b" font-size="9">Developer</text></g>
+              <g><rect x="160" y="100" width="90" height="80" rx="8" fill="#ffffff" stroke="#f59e0b"/><text x="205" y="130" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Build</text><text x="205" y="148" text-anchor="middle" fill="#64748b" font-size="10">Compile</text><text x="205" y="168" text-anchor="middle" fill="#64748b" font-size="9">CI Step</text></g>
+              <g><rect x="280" y="100" width="90" height="80" rx="8" fill="#ffffff" stroke="#f59e0b"/><text x="325" y="130" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Test</text><text x="325" y="148" text-anchor="middle" fill="#64748b" font-size="10">Unit + E2E</text><text x="325" y="168" text-anchor="middle" fill="#64748b" font-size="9">CI Step</text></g>
+              <g><rect x="400" y="100" width="90" height="80" rx="8" fill="#ffffff" stroke="#34d399"/><text x="445" y="130" text-anchor="middle" fill="#34d399" font-size="11" font-weight="600">Deploy</text><text x="445" y="148" text-anchor="middle" fill="#64748b" font-size="10">Staging/Prod</text><text x="445" y="168" text-anchor="middle" fill="#64748b" font-size="9">CD Step</text></g>
+              <g><rect x="520" y="100" width="90" height="80" rx="8" fill="#ffffff" stroke="#34d399"/><text x="565" y="130" text-anchor="middle" fill="#34d399" font-size="11" font-weight="600">Monitor</text><text x="565" y="148" text-anchor="middle" fill="#64748b" font-size="10">Logs/Alerts</text><text x="565" y="168" text-anchor="middle" fill="#64748b" font-size="9">Feedback</text></g>
+              <!-- Arrows -->
+              <path d="M130 140 H160" stroke="#475569" stroke-width="2"/><path d="M250 140 H280" stroke="#475569" stroke-width="2"/><path d="M370 140 H400" stroke="#475569" stroke-width="2"/><path d="M490 140 H520" stroke="#475569" stroke-width="2"/>
+              <!-- Labels -->
+              <text x="205" y="60" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600">← CI ZONE →</text>
+              <rect x="155" y="48" width="220" height="16" rx="3" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4 2"/>
+              <text x="505" y="60" text-anchor="middle" fill="#34d399" font-size="10" font-weight="600">← CD ZONE →</text>
+              <rect x="395" y="48" width="220" height="16" rx="3" fill="none" stroke="#34d399" stroke-width="1" stroke-dasharray="4 2"/>
+            </svg>
+            <figcaption class="px-4 py-2 text-xs text-slate-500 border-t border-slate-200">CI catches problems early; CD moves verified code to users automatically.</figcaption>
+          </figure>
+
+          <div id="quiz-cicd" class="quiz-container space-y-4"></div>
+        </article>
+
+        <!-- SECTION 3: GitHub Actions Overview -->
+        <article id="overview" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">03</span>
+            <h2 class="text-2xl font-bold text-slate-900">GitHub Actions Overview</h2>
+          </div>
+          <p class="text-slate-600 mb-6 leading-relaxed">
+            <strong class="text-slate-800">GitHub Actions</strong> is GitHub's built-in automation platform. You write small recipe files (called <em>workflows</em>) that tell GitHub what to do when events happen — like pushing code, opening a pull request, or clicking a button.
+          </p>
+
+          <div class="overflow-x-auto mb-8">
+            <table class="w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
+              <thead class="bg-slate-100 text-slate-800">
+                <tr><th class="px-4 py-3 text-left">Term</th><th class="px-4 py-3 text-left">Factory Analogy</th><th class="px-4 py-3 text-left">What It Does</th></tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 text-slate-600">
+                <tr><td class="px-4 py-3 font-mono text-factory-700">Workflow</td><td class="px-4 py-3">Entire assembly line blueprint</td><td class="px-4 py-3">YAML file defining automation</td></tr>
+                <tr><td class="px-4 py-3 font-mono text-factory-700">Event</td><td class="px-4 py-3">Start button / alarm bell</td><td class="px-4 py-3">Trigger (push, PR, schedule…)</td></tr>
+                <tr><td class="px-4 py-3 font-mono text-factory-700">Job</td><td class="px-4 py-3">Work station on the line</td><td class="px-4 py-3">Group of steps that run together</td></tr>
+                <tr><td class="px-4 py-3 font-mono text-factory-700">Step</td><td class="px-4 py-3">Single robot task</td><td class="px-4 py-3">One command or action</td></tr>
+                <tr><td class="px-4 py-3 font-mono text-factory-700">Action</td><td class="px-4 py-3">Pre-built tool attachment</td><td class="px-4 py-3">Reusable unit (from Marketplace)</td></tr>
+                <tr><td class="px-4 py-3 font-mono text-factory-700">Runner</td><td class="px-4 py-3">The factory floor machine</td><td class="px-4 py-3">Server that executes your jobs</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- GitHub Actions ecosystem diagram -->
+          <figure class="rounded-xl border border-slate-200 bg-white p-6 mb-8">
+            <svg viewBox="0 0 560 240" class="w-full max-w-lg mx-auto" xmlns="http://www.w3.org/2000/svg">
+              <rect width="560" height="240" fill="#f8fafc" rx="8"/>
+              <circle cx="280" cy="120" r="50" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+              <text x="280" y="115" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="700">GitHub</text>
+              <text x="280" y="132" text-anchor="middle" fill="#64748b" font-size="10">Repository</text>
+              <!-- Orbit items -->
+              <g><circle cx="100" cy="60" r="35" fill="#f1f5f9" stroke="#6366f1"/><text x="100" y="58" text-anchor="middle" fill="#a5b4fc" font-size="9" font-weight="600">.github/</text><text x="100" y="70" text-anchor="middle" fill="#64748b" font-size="8">workflows/</text></g>
+              <g><circle cx="460" cy="60" r="35" fill="#f1f5f9" stroke="#34d399"/><text x="460" y="58" text-anchor="middle" fill="#34d399" font-size="9" font-weight="600">Actions</text><text x="460" y="70" text-anchor="middle" fill="#64748b" font-size="8">Tab</text></g>
+              <g><circle cx="100" cy="180" r="35" fill="#f1f5f9" stroke="#f59e0b"/><text x="100" y="178" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="600">Marketplace</text><text x="100" y="190" text-anchor="middle" fill="#64748b" font-size="8">Actions</text></g>
+              <g><circle cx="460" cy="180" r="35" fill="#f1f5f9" stroke="#f472b6"/><text x="460" y="178" text-anchor="middle" fill="#f472b6" font-size="9" font-weight="600">Runners</text><text x="460" y="190" text-anchor="middle" fill="#64748b" font-size="8">ubuntu/win/mac</text></g>
+              <line x1="135" y1="75" x2="235" y2="105" stroke="#334155" stroke-width="1.5"/>
+              <line x1="425" y1="75" x2="325" y2="105" stroke="#334155" stroke-width="1.5"/>
+              <line x1="135" y1="165" x2="235" y2="135" stroke="#334155" stroke-width="1.5"/>
+              <line x1="425" y1="165" x2="325" y2="135" stroke="#334155" stroke-width="1.5"/>
+            </svg>
+            <figcaption class="text-center text-xs text-slate-500 mt-2">GitHub Actions lives inside your repo — workflows, the Actions tab, Marketplace tools, and runners all connect here.</figcaption>
+          </figure>
+
+          <div id="quiz-overview" class="quiz-container space-y-4"></div>
+        </article>
+
+        <!-- SECTION 4: Workflow Anatomy -->
+        <article id="anatomy" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">04</span>
+            <h2 class="text-2xl font-bold text-slate-900">Workflow Anatomy</h2>
+          </div>
+          <p class="text-slate-600 mb-6 leading-relaxed">Every workflow is a YAML file stored in <code class="font-mono text-factory-700 text-sm bg-white px-1.5 py-0.5 rounded">.github/workflows/</code>. YAML uses indentation (spaces, not tabs) to show structure — like an indented factory org chart.</p>
+
+          <div class="rounded-xl border border-slate-200 overflow-hidden mb-6 shadow-card">
+            <div class="bg-white px-4 py-2 border-b border-slate-200 flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+              <span class="ml-2 text-xs text-slate-500 font-mono">.github/workflows/ci.yml</span>
+            </div>
+            <pre class="p-4 overflow-x-auto bg-slate-100 border-t border-slate-200 text-sm"><code class="font-mono text-slate-800"><span class="text-slate-500"># Name shown in the Actions tab</span>
+<span class="text-factory-700">name:</span> CI Pipeline
+
+<span class="text-factory-700">on:</span>                    <span class="text-slate-500"># WHEN the line starts</span>
+  <span class="text-factory-700">push:</span>
+    <span class="text-factory-700">branches:</span> [main]
+  <span class="text-factory-700">pull_request:</span>
+    <span class="text-factory-700">branches:</span> [main]
+
+<span class="text-factory-700">jobs:</span>                   <span class="text-slate-500"># Work stations</span>
+  <span class="text-emerald-700">build-and-test:</span>       <span class="text-slate-500"># Job ID</span>
+    <span class="text-factory-700">runs-on:</span> ubuntu-latest  <span class="text-slate-500"># Runner machine</span>
+    <span class="text-factory-700">steps:</span>                <span class="text-slate-500"># Robot tasks</span>
+      - <span class="text-factory-700">uses:</span> actions/checkout@v4
+      - <span class="text-factory-700">uses:</span> actions/setup-node@v4
+        <span class="text-factory-700">with:</span>
+          <span class="text-factory-700">node-version:</span> '20'
+      - <span class="text-factory-700">run:</span> npm ci
+      - <span class="text-factory-700">run:</span> npm test</code></pre>
+          </div>
+
+          <!-- Anatomy breakdown diagram -->
+          <figure class="rounded-xl border border-slate-200 bg-white overflow-hidden mb-8">
+            <svg viewBox="0 0 640 320" class="w-full" xmlns="http://www.w3.org/2000/svg">
+              <rect width="640" height="320" fill="#f8fafc"/>
+              <text x="320" y="24" text-anchor="middle" fill="#64748b" font-size="12">WORKFLOW FILE STRUCTURE</text>
+              <rect x="200" y="40" width="240" height="36" rx="6" fill="#ffffff" stroke="#f59e0b" stroke-width="1.5"/>
+              <text x="320" y="63" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="600">name + on (trigger)</text>
+              <line x1="320" y1="76" x2="320" y2="96" stroke="#475569"/>
+              <rect x="160" y="96" width="320" height="36" rx="6" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+              <text x="320" y="119" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="600">jobs → build-and-test</text>
+              <line x1="320" y1="132" x2="320" y2="152" stroke="#475569"/>
+              <rect x="120" y="152" width="400" height="36" rx="6" fill="#ffffff" stroke="#34d399" stroke-width="1.5"/>
+              <text x="320" y="175" text-anchor="middle" fill="#34d399" font-size="12" font-weight="600">runs-on: ubuntu-latest (runner)</text>
+              <line x1="320" y1="188" x2="320" y2="208" stroke="#475569"/>
+              <rect x="80" y="208" width="120" height="44" rx="6" fill="#f1f5f9" stroke="#64748b"/><text x="140" y="228" text-anchor="middle" fill="#475569" font-size="10">checkout</text><text x="140" y="242" text-anchor="middle" fill="#64748b" font-size="9">step 1</text>
+              <rect x="220" y="208" width="120" height="44" rx="6" fill="#f1f5f9" stroke="#64748b"/><text x="280" y="228" text-anchor="middle" fill="#475569" font-size="10">setup-node</text><text x="280" y="242" text-anchor="middle" fill="#64748b" font-size="9">step 2</text>
+              <rect x="360" y="208" width="120" height="44" rx="6" fill="#f1f5f9" stroke="#64748b"/><text x="420" y="228" text-anchor="middle" fill="#475569" font-size="10">npm ci</text><text x="420" y="242" text-anchor="middle" fill="#64748b" font-size="9">step 3</text>
+              <rect x="500" y="208" width="120" height="44" rx="6" fill="#f1f5f9" stroke="#64748b"/><text x="560" y="228" text-anchor="middle" fill="#475569" font-size="10">npm test</text><text x="560" y="242" text-anchor="middle" fill="#64748b" font-size="9">step 4</text>
+              <line x1="320" y1="208" x2="140" y2="208" stroke="#475569" stroke-width="1"/><line x1="320" y1="208" x2="280" y2="208" stroke="#475569"/><line x1="320" y1="208" x2="420" y2="208" stroke="#475569"/><line x1="320" y1="208" x2="560" y2="208" stroke="#475569"/>
+              <text x="320" y="290" text-anchor="middle" fill="#64748b" font-size="10">Steps run top-to-bottom, sequentially, on the same runner</text>
+            </svg>
+          </figure>
+
+          <div id="quiz-anatomy" class="quiz-container space-y-4"></div>
+        </article>
+
+        <!-- SECTION 5: First Workflow -->
+        <article id="first-workflow" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">05</span>
+            <h2 class="text-2xl font-bold text-slate-900">Writing Your First Workflow</h2>
+          </div>
+          <p class="text-slate-600 mb-6 leading-relaxed">Let's build a real workflow step by step. We'll create a simple CI pipeline for a Node.js project.</p>
+
+          <ol class="space-y-6 mb-8">
+            <li class="flex gap-4">
+              <span class="shrink-0 w-7 h-7 rounded-full bg-factory-500/20 text-factory-600 text-sm font-bold flex items-center justify-center">1</span>
+              <div>
+                <h3 class="font-semibold text-slate-900 mb-1">Create the workflows folder</h3>
+                <p class="text-sm text-slate-600">In your repo root, create <code class="font-mono text-factory-700 text-xs">.github/workflows/ci.yml</code>. The dot-folder is required — GitHub looks there automatically.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="shrink-0 w-7 h-7 rounded-full bg-factory-500/20 text-factory-600 text-sm font-bold flex items-center justify-center">2</span>
+              <div>
+                <h3 class="font-semibold text-slate-900 mb-1">Define the trigger</h3>
+                <p class="text-sm text-slate-600">Use <code class="font-mono text-xs text-factory-700">on: push</code> to run on every push, or limit to specific branches to save factory resources.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="shrink-0 w-7 h-7 rounded-full bg-factory-500/20 text-factory-600 text-sm font-bold flex items-center justify-center">3</span>
+              <div>
+                <h3 class="font-semibold text-slate-900 mb-1">Add checkout & setup steps</h3>
+                <p class="text-sm text-slate-600">Always start with <code class="font-mono text-xs text-factory-700">actions/checkout@v4</code> to copy your code onto the runner. Then install your language runtime.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="shrink-0 w-7 h-7 rounded-full bg-factory-500/20 text-factory-600 text-sm font-bold flex items-center justify-center">4</span>
+              <div>
+                <h3 class="font-semibold text-slate-900 mb-1">Run your build & tests</h3>
+                <p class="text-sm text-slate-600">Use <code class="font-mono text-xs text-factory-700">run:</code> for shell commands. If any step fails, the whole job stops — the red light turns on.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="shrink-0 w-7 h-7 rounded-full bg-factory-500/20 text-factory-600 text-sm font-bold flex items-center justify-center">5</span>
+              <div>
+                <h3 class="font-semibold text-slate-900 mb-1">Commit, push, and watch</h3>
+                <p class="text-sm text-slate-600">Go to your repo's <strong class="text-slate-700">Actions</strong> tab. You'll see a yellow (running), green (success), or red (failure) indicator for each run.</p>
+              </div>
+            </li>
+          </ol>
+
+          <div class="rounded-xl border border-slate-200 overflow-hidden mb-8 shadow-card">
+            <div class="bg-white px-4 py-2 border-b border-slate-200 text-xs text-slate-500 font-mono">Complete first workflow example</div>
+            <pre class="p-4 overflow-x-auto bg-slate-100 border-t border-slate-200 text-sm"><code class="font-mono text-slate-800">name: My First CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test
+      - run: npm run build</code></pre>
+          </div>
+
+          <div id="quiz-first-workflow" class="quiz-container space-y-4"></div>
+        </article>
+
+        <!-- SECTION 6: Jobs, Steps & Runners -->
+        <article id="jobs" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">06</span>
+            <h2 class="text-2xl font-bold text-slate-900">Jobs, Steps & Runners</h2>
+          </div>
+
+          <div class="space-y-6 mb-8">
+            <div class="p-5 rounded-xl bg-white border border-slate-200">
+              <h3 class="font-semibold text-slate-900 mb-2">Jobs run in parallel by default</h3>
+              <p class="text-sm text-slate-600 mb-3">Multiple jobs are like parallel assembly lines. Use <code class="font-mono text-xs text-factory-700">needs:</code> to make one job wait for another — creating a dependency chain.</p>
+              <pre class="p-3 rounded-lg bg-slate-100 border border-slate-200 text-xs overflow-x-auto"><code class="font-mono text-slate-800">jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps: [...]
+  test:
+    needs: lint          # waits for lint to finish
+    runs-on: ubuntu-latest
+    steps: [...]
+  deploy:
+    needs: test          # waits for test
+    runs-on: ubuntu-latest
+    steps: [...]</code></pre>
+            </div>
+
+            <div class="p-5 rounded-xl bg-white border border-slate-200">
+              <h3 class="font-semibold text-slate-900 mb-2">Matrix builds — test every combination</h3>
+              <p class="text-sm text-slate-600 mb-3">A <code class="font-mono text-xs text-factory-700">strategy.matrix</code> runs the same job on multiple OS versions or Node versions simultaneously — like running five quality checks at once.</p>
+              <pre class="p-3 rounded-lg bg-slate-100 border border-slate-200 text-xs overflow-x-auto"><code class="font-mono text-slate-800">strategy:
+  matrix:
+    node-version: [18, 20, 22]
+    os: [ubuntu-latest, windows-latest]
+steps:
+  - uses: actions/setup-node@v4
+    with:
+      node-version: ${{ matrix.node-version }}</code></pre>
+            </div>
+
+            <div class="p-5 rounded-xl bg-white border border-slate-200">
+              <h3 class="font-semibold text-slate-900 mb-2">Runners: GitHub-hosted vs self-hosted</h3>
+              <p class="text-sm text-slate-600"><strong class="text-slate-700">GitHub-hosted</strong> runners are free virtual machines (with monthly minute limits). <strong class="text-slate-700">Self-hosted</strong> runners are your own servers — useful for private networks, GPUs, or special hardware.</p>
+            </div>
+          </div>
+
+          <!-- Job dependency diagram -->
+          <figure class="rounded-xl border border-slate-200 bg-white overflow-hidden mb-8">
+            <svg viewBox="0 0 640 220" class="w-full" xmlns="http://www.w3.org/2000/svg">
+              <rect width="640" height="220" fill="#f8fafc"/>
+              <text x="320" y="24" text-anchor="middle" fill="#64748b" font-size="12">JOB DEPENDENCY GRAPH (needs:)</text>
+              <rect x="260" y="50" width="120" height="44" rx="8" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+              <text x="320" y="77" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="600">lint</text>
+              <line x1="320" y1="94" x2="320" y2="114" stroke="#475569" stroke-width="2"/>
+              <rect x="260" y="114" width="120" height="44" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="1.5"/>
+              <text x="320" y="141" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="600">test</text>
+              <line x1="320" y1="158" x2="320" y2="178" stroke="#475569" stroke-width="2"/>
+              <rect x="260" y="178" width="120" height="44" rx="8" fill="#ffffff" stroke="#34d399" stroke-width="1.5"/>
+              <text x="320" y="205" text-anchor="middle" fill="#34d399" font-size="12" font-weight="600">deploy</text>
+              <text x="420" y="77" fill="#64748b" font-size="10">parallel possible</text>
+              <rect x="80" y="114" width="100" height="44" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4"/>
+              <text x="130" y="141" text-anchor="middle" fill="#64748b" font-size="11">security-scan</text>
+              <line x1="180" y1="136" x2="260" y2="136" stroke="#475569" stroke-dasharray="4"/>
+              <text x="420" y="141" fill="#64748b" font-size="10">needs: lint</text>
+            </svg>
+          </figure>
+
+          <div id="quiz-jobs" class="quiz-container space-y-4"></div>
+        </article>
+
+        <!-- SECTION 7: Secrets & Variables -->
+        <article id="secrets" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">07</span>
+            <h2 class="text-2xl font-bold text-slate-900">Secrets, Variables & Environments</h2>
+          </div>
+          <p class="text-slate-600 mb-6 leading-relaxed">Your factory handles sensitive materials — API keys, passwords, tokens. Never put these in your workflow file. GitHub provides a secure vault.</p>
+
+          <div class="grid sm:grid-cols-3 gap-4 mb-8">
+            <div class="p-4 rounded-xl bg-white border border-red-500/20">
+              <h3 class="font-semibold text-red-600 text-sm mb-2">Secrets</h3>
+              <p class="text-xs text-slate-600">Encrypted values. Set in <em>Settings → Secrets and variables → Actions</em>. Access via <code class="font-mono text-red-600">${{ secrets.MY_KEY }}</code>. Never logged in plain text.</p>
+            </div>
+            <div class="p-4 rounded-xl bg-white border border-indigo-500/20">
+              <h3 class="font-semibold text-indigo-600 text-sm mb-2">Variables</h3>
+              <p class="text-xs text-slate-600">Non-sensitive config like region names. Access via <code class="font-mono text-indigo-700">${{ vars.APP_ENV }}</code>. Can be repo, org, or environment scoped.</p>
+            </div>
+            <div class="p-4 rounded-xl bg-white border border-emerald-500/20">
+              <h3 class="font-semibold text-emerald-600 text-sm mb-2">Environments</h3>
+              <p class="text-xs text-slate-600">Named targets like <code class="font-mono text-emerald-700">production</code> with protection rules — required reviewers, wait timers, branch restrictions.</p>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 overflow-hidden mb-8 shadow-card">
+            <pre class="p-4 overflow-x-auto bg-slate-100 border-t border-slate-200 text-sm"><code class="font-mono text-slate-800">jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production    # triggers protection rules
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to cloud
+        env:
+          API_KEY: ${{ secrets.DEPLOY_API_KEY }}
+          REGION:  ${{ vars.AWS_REGION }}
+        run: ./deploy.sh</code></pre>
+          </div>
+
+          <!-- Secrets flow diagram -->
+          <figure class="rounded-xl border border-slate-200 bg-white p-4 mb-8">
+            <svg viewBox="0 0 560 180" class="w-full" xmlns="http://www.w3.org/2000/svg">
+              <rect width="560" height="180" fill="#f8fafc"/>
+              <rect x="30" y="60" width="130" height="60" rx="8" fill="#ffffff" stroke="#ef4444" stroke-width="1.5"/>
+              <text x="95" y="88" text-anchor="middle" fill="#f87171" font-size="11" font-weight="600">GitHub Secrets</text>
+              <text x="95" y="106" text-anchor="middle" fill="#64748b" font-size="9">Encrypted vault</text>
+              <path d="M160 90 H220" stroke="#475569" stroke-width="2" marker-end="url(#a2)"/>
+              <rect x="220" y="60" width="120" height="60" rx="8" fill="#ffffff" stroke="#f59e0b"/>
+              <text x="280" y="88" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Workflow</text>
+              <text x="280" y="106" text-anchor="middle" fill="#64748b" font-size="9">${{ secrets.* }}</text>
+              <path d="M340 90 H400" stroke="#475569" stroke-width="2"/>
+              <rect x="400" y="60" width="130" height="60" rx="8" fill="#ffffff" stroke="#34d399"/>
+              <text x="465" y="88" text-anchor="middle" fill="#34d399" font-size="11" font-weight="600">Deploy Script</text>
+              <text x="465" y="106" text-anchor="middle" fill="#64748b" font-size="9">env vars only</text>
+              <text x="280" y="155" text-anchor="middle" fill="#64748b" font-size="10">Secrets are injected at runtime — never appear in logs</text>
+              <defs><marker id="a2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#475569"/></marker></defs>
+            </svg>
+          </figure>
+
+          <div id="quiz-secrets" class="quiz-container space-y-4"></div>
+        </article>
+
+        <!-- SECTION 8: Monitoring -->
+        <article id="monitoring" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">08</span>
+            <h2 class="text-2xl font-bold text-slate-900">Monitoring Success & Failure</h2>
+          </div>
+          <p class="text-slate-600 mb-6 leading-relaxed">Every factory needs dashboards and alarm bells. GitHub Actions gives you multiple ways to gauge whether your pipeline is healthy.</p>
+
+          <h3 class="font-semibold text-slate-900 mb-4">Built-in GitHub UI</h3>
+          <ul class="text-sm text-slate-600 space-y-2 mb-6 list-disc list-inside">
+            <li><strong class="text-slate-700">Actions tab</strong> — see all workflow runs with ✅ success, ❌ failure, 🟡 in-progress, or ⏸ cancelled status.</li>
+            <li><strong class="text-slate-700">Job logs</strong> — click any run to expand steps and read stdout/stderr output line by line.</li>
+            <li><strong class="text-slate-700">Annotations</strong> — tools like linters can attach inline comments on the exact file and line that failed.</li>
+            <li><strong class="text-slate-700">Workflow badges</strong> — embed a status shield in your README: <code class="font-mono text-xs text-factory-700">![CI](https://github.com/user/repo/actions/workflows/ci.yml/badge.svg)</code></li>
+          </ul>
+
+          <h3 class="font-semibold text-slate-900 mb-4">Programmatic Access & Metrics</h3>
+          <div class="space-y-4 mb-8">
+            <div class="p-4 rounded-xl bg-white border border-slate-200">
+              <h4 class="text-sm font-semibold text-factory-700 mb-2">GitHub REST API</h4>
+              <p class="text-xs text-slate-600 mb-2">Query workflow runs, jobs, and conclusions programmatically:</p>
+              <pre class="p-3 rounded bg-slate-100 border border-slate-200 text-xs overflow-x-auto"><code class="font-mono text-slate-800">GET /repos/{owner}/{repo}/actions/runs
+GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs
+
+# Key fields in response:
+# status: "completed" | "in_progress" | "queued"
+# conclusion: "success" | "failure" | "cancelled" | "skipped"</code></pre>
+            </div>
+            <div class="p-4 rounded-xl bg-white border border-slate-200">
+              <h4 class="text-sm font-semibold text-factory-700 mb-2">Workflow Commands & Outputs</h4>
+              <p class="text-xs text-slate-600 mb-2">Set outputs and mark steps explicitly inside a workflow:</p>
+              <pre class="p-3 rounded bg-slate-100 border border-slate-200 text-xs overflow-x-auto"><code class="font-mono text-slate-800">- name: Set result
+  id: check
+  run: echo "passed=true" >> $GITHUB_OUTPUT
+
+- name: Fail with message
+  run: echo "::error file=app.js,line=10::Tests failed"
+
+- name: Summary report
+  run: echo "## Test Results" >> $GITHUB_STEP_SUMMARY</code></pre>
+            </div>
+            <div class="p-4 rounded-xl bg-white border border-slate-200">
+              <h4 class="text-sm font-semibold text-factory-700 mb-2">Third-Party Observability</h4>
+              <p class="text-xs text-slate-600">Send metrics to Datadog, Grafana, Sentry, or Slack via actions. Track <strong class="text-slate-700">pass rate</strong>, <strong class="text-slate-700">duration (P50/P95)</strong>, <strong class="text-slate-700">flaky test rate</strong>, and <strong class="text-slate-700">MTTR</strong> (mean time to recovery).</p>
+            </div>
+          </div>
+
+          <!-- Status monitoring diagram -->
+          <figure class="rounded-xl border border-slate-200 bg-white overflow-hidden mb-8">
+            <svg viewBox="0 0 640 260" class="w-full" xmlns="http://www.w3.org/2000/svg">
+              <rect width="640" height="260" fill="#f8fafc"/>
+              <text x="320" y="24" text-anchor="middle" fill="#64748b" font-size="12">CI/CD OBSERVABILITY STACK</text>
+              <rect x="40" y="50" width="560" height="50" rx="8" fill="#ffffff" stroke="#334155"/>
+              <text x="320" y="80" text-anchor="middle" fill="#475569" font-size="12">GitHub Actions Run (source of truth)</text>
+              <line x1="160" y1="100" x2="160" y2="130" stroke="#475569"/><line x1="320" y1="100" x2="320" y2="130" stroke="#475569"/><line x1="480" y1="100" x2="480" y2="130" stroke="#475569"/>
+              <rect x="80" y="130" width="160" height="70" rx="8" fill="#f1f5f9" stroke="#6366f1"/><text x="160" y="158" text-anchor="middle" fill="#a5b4fc" font-size="11" font-weight="600">Actions Tab UI</text><text x="160" y="178" text-anchor="middle" fill="#64748b" font-size="9">Logs, badges, annotations</text>
+              <rect x="240" y="130" width="160" height="70" rx="8" fill="#f1f5f9" stroke="#f59e0b"/><text x="320" y="158" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">REST / GraphQL API</text><text x="320" y="178" text-anchor="middle" fill="#64748b" font-size="9">Automated dashboards</text>
+              <rect x="400" y="130" width="160" height="70" rx="8" fill="#f1f5f9" stroke="#34d399"/><text x="480" y="158" text-anchor="middle" fill="#34d399" font-size="11" font-weight="600">Alerts & Webhooks</text><text x="480" y="178" text-anchor="middle" fill="#64748b" font-size="9">Slack, PagerDuty, email</text>
+              <rect x="120" y="220" width="400" height="30" rx="6" fill="#ffffff" stroke="#64748b"/>
+              <text x="320" y="240" text-anchor="middle" fill="#64748b" font-size="10">Key metrics: success rate · build duration · failure frequency · queue time</text>
+            </svg>
+          </figure>
+
+          <div id="quiz-monitoring" class="quiz-container space-y-4"></div>
+        </article>
+
+        <!-- SECTION 9: Best Practices -->
+        <article id="practices" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">09</span>
+            <h2 class="text-2xl font-bold text-slate-900">Best Practices & Common Patterns</h2>
+          </div>
+
+          <div class="space-y-4 mb-8">
+            <div class="flex gap-3 p-4 rounded-xl bg-white border border-slate-200">
+              <span class="text-emerald-600 shrink-0">✓</span>
+              <div><h3 class="text-sm font-semibold text-slate-900">Pin action versions</h3><p class="text-xs text-slate-600">Use <code class="font-mono text-factory-700">@v4</code> or commit SHAs instead of <code class="font-mono">@main</code> to prevent surprise breaking changes.</p></div>
+            </div>
+            <div class="flex gap-3 p-4 rounded-xl bg-white border border-slate-200">
+              <span class="text-emerald-600 shrink-0">✓</span>
+              <div><h3 class="text-sm font-semibold text-slate-900">Cache dependencies</h3><p class="text-xs text-slate-600">Use <code class="font-mono text-factory-700">actions/cache</code> or built-in cache options to speed up builds — less idle conveyor belt time.</p></div>
+            </div>
+            <div class="flex gap-3 p-4 rounded-xl bg-white border border-slate-200">
+              <span class="text-emerald-600 shrink-0">✓</span>
+              <div><h3 class="text-sm font-semibold text-slate-900">Fail fast with path filters</h3><p class="text-xs text-slate-600">Use <code class="font-mono text-factory-700">paths:</code> in triggers so docs-only changes don't run the full test suite.</p></div>
+            </div>
+            <div class="flex gap-3 p-4 rounded-xl bg-white border border-slate-200">
+              <span class="text-emerald-600 shrink-0">✓</span>
+              <div><h3 class="text-sm font-semibold text-slate-900">Use concurrency groups</h3><p class="text-xs text-slate-600">Cancel outdated runs on the same PR to save minutes: <code class="font-mono text-factory-700">concurrency: group: ${{ github.ref }}</code>.</p></div>
+            </div>
+            <div class="flex gap-3 p-4 rounded-xl bg-white border border-slate-200">
+              <span class="text-emerald-600 shrink-0">✓</span>
+              <div><h3 class="text-sm font-semibold text-slate-900">Reusable workflows</h3><p class="text-xs text-slate-600">Extract shared pipelines into <code class="font-mono text-factory-700">workflow_call</code> workflows — one blueprint, many repos.</p></div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 overflow-hidden mb-8 shadow-card">
+            <div class="bg-white px-4 py-2 border-b border-slate-200 text-xs text-slate-500">Reusable workflow pattern</div>
+            <pre class="p-4 overflow-x-auto bg-slate-100 border-t border-slate-200 text-sm"><code class="font-mono text-slate-800"># .github/workflows/reusable-test.yml
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - run: npm test</code></pre>
+          </div>
+
+          <div id="quiz-practices" class="quiz-container space-y-4"></div>
+        </article>
+
+        <!-- SECTION 10: Examples & Troubleshooting -->
+        <article id="examples" class="scroll-mt-20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="flex items-center justify-center w-8 h-8 rounded bg-factory-500/20 text-factory-600 text-sm font-bold">10</span>
+            <h2 class="text-2xl font-bold text-slate-900">Real-World Examples & Troubleshooting</h2>
+          </div>
+
+          <h3 class="font-semibold text-slate-900 mb-3">Example: Python + Docker Deploy</h3>
+          <div class="rounded-xl border border-slate-200 overflow-hidden mb-8 shadow-card">
+            <pre class="p-4 overflow-x-auto bg-slate-100 border-t border-slate-200 text-sm"><code class="font-mono text-slate-800">name: Python CI/CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: pytest
+
+  docker:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: myapp:latest</code></pre>
+          </div>
+
+          <h3 class="font-semibold text-slate-900 mb-3">Common Failures & Fixes</h3>
+          <div class="overflow-x-auto mb-8">
+            <table class="w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
+              <thead class="bg-slate-100 text-slate-800"><tr><th class="px-4 py-3 text-left">Symptom</th><th class="px-4 py-3 text-left">Likely Cause</th><th class="px-4 py-3 text-left">Fix</th></tr></thead>
+              <tbody class="divide-y divide-slate-200 text-slate-600 text-xs">
+                <tr><td class="px-4 py-3 text-red-600">Workflow not triggering</td><td class="px-4 py-3">Wrong branch or path filter</td><td class="px-4 py-3">Check <code class="font-mono text-factory-700">on:</code> block matches your push</td></tr>
+                <tr><td class="px-4 py-3 text-red-600">Permission denied</td><td class="px-4 py-3">Missing <code class="font-mono">permissions:</code></td><td class="px-4 py-3">Add <code class="font-mono">contents: write</code> if pushing tags</td></tr>
+                <tr><td class="px-4 py-3 text-red-600">Secret not found</td><td class="px-4 py-3">Typo or wrong scope</td><td class="px-4 py-3">Verify name in Settings → Secrets</td></tr>
+                <tr><td class="px-4 py-3 text-red-600">YAML syntax error</td><td class="px-4 py-3">Tabs or bad indentation</td><td class="px-4 py-3">Use spaces only; validate with actionlint</td></tr>
+                <tr><td class="px-4 py-3 text-red-600">Out of minutes</td><td class="px-4 py-3">Free tier limit reached</td><td class="px-4 py-3">Optimize caching, use path filters, or upgrade plan</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Troubleshooting flowchart -->
+          <figure class="rounded-xl border border-slate-200 bg-white overflow-hidden mb-8">
+            <svg viewBox="0 0 640 300" class="w-full" xmlns="http://www.w3.org/2000/svg">
+              <rect width="640" height="300" fill="#f8fafc"/>
+              <text x="320" y="24" text-anchor="middle" fill="#64748b" font-size="12">TROUBLESHOOTING DECISION TREE</text>
+              <polygon points="320,40 380,70 320,100 260,70" fill="#ffffff" stroke="#ef4444"/>
+              <text x="320" y="75" text-anchor="middle" fill="#f87171" font-size="10" font-weight="600">Run Failed?</text>
+              <line x1="260" y1="70" x2="140" y2="70" stroke="#475569"/><line x1="140" y1="70" x2="140" y2="110" stroke="#475569"/>
+              <rect x="60" y="110" width="160" height="40" rx="6" fill="#f1f5f9" stroke="#f59e0b"/><text x="140" y="135" text-anchor="middle" fill="#fbbf24" font-size="10">Check Actions logs</text>
+              <line x1="380" y1="70" x2="500" y2="70" stroke="#475569"/><line x1="500" y1="70" x2="500" y2="110" stroke="#475569"/>
+              <rect x="420" y="110" width="160" height="40" rx="6" fill="#f1f5f9" stroke="#64748b"/><text x="500" y="135" text-anchor="middle" fill="#475569" font-size="10">No run at all?</text>
+              <line x1="140" y1="150" x2="140" y2="180" stroke="#475569"/>
+              <rect x="60" y="180" width="160" height="40" rx="6" fill="#f1f5f9" stroke="#6366f1"/><text x="140" y="205" text-anchor="middle" fill="#a5b4fc" font-size="10">Fix failing step</text>
+              <line x1="500" y1="150" x2="500" y2="180" stroke="#475569"/>
+              <rect x="420" y="180" width="160" height="40" rx="6" fill="#f1f5f9" stroke="#6366f1"/><text x="500" y="205" text-anchor="middle" fill="#a5b4fc" font-size="10">Check on: trigger</text>
+              <line x1="140" y1="220" x2="140" y2="250" stroke="#475569"/>
+              <rect x="60" y="250" width="160" height="36" rx="6" fill="#ffffff" stroke="#34d399"/><text x="140" y="273" text-anchor="middle" fill="#34d399" font-size="10">✅ Green build</text>
+              <line x1="500" y1="220" x2="500" y2="250" stroke="#475569"/>
+              <rect x="420" y="250" width="160" height="36" rx="6" fill="#ffffff" stroke="#34d399"/><text x="500" y="273" text-anchor="middle" fill="#34d399" font-size="10">✅ Green build</text>
+            </svg>
+          </figure>
+
+          <div class="p-6 rounded-xl bg-gradient-to-br from-factory-100 to-indigo-50 border border-factory-200 text-center">
+            <h3 class="text-lg font-bold text-slate-900 mb-2">You're Ready for the Factory Floor!</h3>
+            <p class="text-sm text-slate-600">You've learned CI/CD fundamentals, workflow anatomy, secrets, monitoring, and troubleshooting. Push your first workflow and watch the assembly line run.</p>
+          </div>
+
+          <div id="quiz-examples" class="quiz-container space-y-4 mt-10"></div>
+        </article>
+
+      </div>
+
+      <!-- Footer -->
+      <footer class="border-t border-slate-200 mt-10 py-8 text-center text-xs text-slate-600">
+        <p>GitHub Actions CI/CD Tutorial · Factory Floor Guide · Built with Tailwind CSS</p>
+      </footer>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
