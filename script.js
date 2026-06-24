@@ -29,7 +29,7 @@ const QUIZ_DATA = {
     {
       q: "Which version control skill is essential before learning GitHub Actions?",
       options: ["Basic Git operations like clone, commit, and push","Advanced merge conflict resolution only","Git bisect and cherry-pick","Subversion (SVN) experience"],
-      correct: 1,
+      correct: 0,
       explain: "GitHub Actions triggers on Git events (push, PR, etc.), so you need to understand how to commit and push code to a GitHub repository."
     },
     {
@@ -59,7 +59,7 @@ const QUIZ_DATA = {
     {
       q: "Why is understanding branches helpful before using CI/CD?",
       options: ["Branches are only for documentation","Workflows often trigger on specific branches like main","Branches disable GitHub Actions","Branches replace the need for workflows"],
-      correct: 2,
+      correct: 1,
       explain: "Most CI workflows use on: push: branches: [main] to run only on certain branches. Understanding branches helps you configure triggers correctly."
     },
     {
@@ -179,7 +179,7 @@ const QUIZ_DATA = {
     {
       q: "What is a \"runner\" in GitHub Actions?",
       options: ["A marathon training app","A type of Git branch","The server/machine that executes workflow jobs","A GitHub Copilot feature"],
-      correct: 1,
+      correct: 2,
       explain: "A runner is the compute environment (GitHub-hosted VM or your own machine) where job steps actually execute."
     },
     {
@@ -224,7 +224,7 @@ const QUIZ_DATA = {
     {
       q: "What does \"runs-on:\" specify for a job?",
       options: ["The number of retries","Which Git branch to deploy","The runner operating system/environment","The workflow file name"],
-      correct: 0,
+      correct: 2,
       explain: "runs-on: ubuntu-latest tells GitHub to execute the job on an Ubuntu Linux virtual machine."
     },
     {
@@ -242,7 +242,7 @@ const QUIZ_DATA = {
     {
       q: "What does \"jobs:\" contain in a workflow file?",
       options: ["Job listings for hiring","One or more job definitions, each with steps","GitHub issue assignments","Git commit history"],
-      correct: 3,
+      correct: 1,
       explain: "The jobs: key holds named job blocks (e.g., build-and-test:) each containing runs-on and steps."
     },
     {
@@ -368,7 +368,7 @@ const QUIZ_DATA = {
     {
       q: "Can steps within the same job run on different runners?",
       options: ["No — all steps in a job share the same runner","Only on macOS","Only with Enterprise plan","Yes — each step gets its own runner"],
-      correct: 3,
+      correct: 0,
       explain: "All steps in a job execute sequentially on the same runner instance, sharing the filesystem and environment."
     },
     {
@@ -506,7 +506,7 @@ const QUIZ_DATA = {
     {
       q: "What does MTTR stand for in CI/CD observability?",
       options: ["Maximum Test Time Required","Minimum Threshold Test Result","Manual Test Trigger Rate","Mean Time To Repair/Recovery"],
-      correct: 1,
+      correct: 3,
       explain: "MTTR measures how quickly your team restores a passing pipeline after a failure — a key DevOps health metric."
     },
     {
@@ -539,7 +539,7 @@ const QUIZ_DATA = {
     {
       q: "What do path filters in workflow triggers do?",
       options: ["Filter log output by file type","Run workflows only when specific files/folders change","Delete unused files","Encrypt file paths"],
-      correct: 2,
+      correct: 1,
       explain: "paths: or paths-ignore: under on: push: limit runs to relevant changes — e.g., skip CI when only README.md changes."
     },
     {
@@ -602,13 +602,13 @@ const QUIZ_DATA = {
     {
       q: "A workflow never triggers after pushing. What should you check FIRST?",
       options: ["GitHub's stock price","Your internet speed","Whether the on: trigger matches your branch and event","Your monitor brightness"],
-      correct: 0,
+      correct: 2,
       explain: "The most common cause is a mismatch between on: push: branches: and the branch you actually pushed to."
     },
     {
       q: "What causes \"Permission denied\" when a workflow tries to push a tag?",
       options: ["Wrong Node.js version","YAML uses tabs","Insufficient GITHUB_TOKEN permissions — need contents: write","Missing Docker installed"],
-      correct: 1,
+      correct: 2,
       explain: "The default GITHUB_TOKEN has read-only permissions. Add permissions: contents: write to the workflow or job to allow pushing."
     },
     {
@@ -626,7 +626,7 @@ const QUIZ_DATA = {
     {
       q: "What does docker/login-action do in the example workflow?",
       options: ["Installs Docker on your laptop","Logs into your GitHub account","Authenticates with a Docker registry using secrets","Deletes Docker images"],
-      correct: 0,
+      correct: 2,
       explain: "docker/login-action authenticates the runner with Docker Hub (or other registries) using username/password secrets before push."
     },
     {
